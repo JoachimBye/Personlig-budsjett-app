@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forbruk</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F2ED;
+    --surface: #FFFFFF;
+    --ink: #1A1814;
+    --ink-muted: #7A7670;
+    --ink-faint: #C8C4BE;
+    --accent: #2D6A4F;
+    --accent-light: #E8F4EE;
+    --accent-mid: #52B788;
+    --warn: #C77B3A;
+    --warn-light: #FDF0E3;
+    --danger: #C0392B;
+    --danger-light: #FDECEA;
+    --border: #E8E4DE;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── LAYOUT ── */
+  .app { max-width: 440px; margin: 0 auto; padding: 0 0 100px; }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 48px 24px 24px;
+    position: relative;
+  }
+  .header-date {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  /* ── DAILY TOTAL ── */
+  .daily-card {
+    margin: 0 16px 20px;
+    background: var(--ink);
+    border-radius: var(--radius);
+    padding: 24px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .daily-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.04);
+  }
+  .daily-label { font-size: 12px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; opacity: .5; margin-bottom: 6px; }
+  .daily-amount {
+    font-family: 'DM Serif Display', serif;
+    font-size: 48px;
+    line-height: 1;
+    letter-spacing: -.02em;
+  }
+  .daily-amount span { font-size: 22px; opacity: .6; margin-left: 4px; vertical-align: middle; }
+  .daily-meta { margin-top: 16px; display: flex; gap: 20px; }
+  .daily-meta-item { font-size: 13px; opacity: .6; }
+  .daily-meta-item strong { display: block; font-size: 15px; font-weight: 500; opacity: 1; color: #fff; }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 0 24px;
+    margin-bottom: 10px;
+  }
+
+  /* ── CATEGORY PILLS ── */
+  .cat-scroll { display: flex; gap: 8px; padding: 0 16px; overflow-x: auto; margin-bottom: 20px; scrollbar-width: none; }
+  .cat-scroll::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .cat-pill.active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .cat-pill .cat-icon { font-size: 16px; }
+
+  /* ── TRANSACTION LIST ── */
+  .tx-list { display: flex; flex-direction: column; gap: 2px; padding: 0 16px; margin-bottom: 20px; }
+
+  .tx-item {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn .2s ease;
+  }
+  .tx-item:first-child { border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius-sm); }
+  .tx-item:last-child { border-radius: var(--radius-sm) var(--radius-sm) var(--radius) var(--radius); }
+  .tx-item:only-child { border-radius: var(--radius); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .tx-dot {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-meta { font-size: 12px; color: var(--ink-muted); margin-top: 1px; }
+  .tx-amount { font-weight: 500; font-size: 15px; flex-shrink: 0; }
+  .tx-delete {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .tx-delete:hover { background: var(--danger-light); color: var(--danger); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--ink-muted);
+  }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── WEEK SUMMARY ── */
+  .week-card {
+    margin: 0 16px 20px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .week-title { font-weight: 500; font-size: 14px; margin-bottom: 14px; }
+  .cat-bar-row { display: flex; flex-direction: column; gap: 10px; }
+  .cat-bar-item { display: flex; align-items: center; gap: 10px; }
+  .cat-bar-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+  .cat-bar-label { font-size: 13px; width: 90px; flex-shrink: 0; color: var(--ink-muted); }
+  .cat-bar-track { flex: 1; height: 6px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .cat-bar-val { font-size: 13px; font-weight: 500; width: 64px; text-align: right; flex-shrink: 0; }
+
+  /* ── ADD BUTTON ── */
+  .add-fab {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 99px;
+    padding: 16px 32px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 24px rgba(26,24,20,.25);
+    transition: transform .15s, box-shadow .15s;
+    white-space: nowrap;
+  }
+  .add-fab:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 6px 28px rgba(26,24,20,.3); }
+  .add-fab:active { transform: translateX(-50%) scale(.97); }
+
+  /* ── MODAL OVERLAY ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,24,20,.45);
+    display: none;
+    align-items: flex-end;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+  }
+  .overlay.open { display: flex; }
+
+  .sheet {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 12px 24px 40px;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    animation: sheetUp .25s ease;
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 99px; margin: 0 auto 20px; }
+  .sheet-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 20px; }
+
+  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+  .cat-option {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .12s;
+    background: var(--surface);
+  }
+  .cat-option:hover { border-color: var(--ink-faint); }
+  .cat-option.selected { border-color: var(--accent); background: var(--accent-light); }
+  .cat-option .opt-icon { font-size: 22px; margin-bottom: 4px; }
+  .cat-option .opt-label { font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+  .cat-option.selected .opt-label { color: var(--accent); }
+
+  .amount-row { margin-bottom: 16px; }
+  .amount-label { font-size: 12px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 6px; }
+  .amount-input-wrap { position: relative; }
+  .amount-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px 14px 48px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--ink);
+    background: var(--bg);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .amount-input:focus { border-color: var(--accent); }
+  .amount-currency {
+    position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--ink-muted);
+    pointer-events: none;
+  }
+
+  .note-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--bg);
+    outline: none;
+    margin-bottom: 20px;
+    transition: border-color .15s;
+  }
+  .note-input::placeholder { color: var(--ink-faint); }
+  .note-input:focus { border-color: var(--accent); }
+
+  .save-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .save-btn:hover { opacity: .88; }
+  .save-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── CAT COLORS ── */
+  .dot-mat    { background: #E8F4EE; }
+  .dot-kaffe  { background: #FDF0E3; }
+  .dot-transport { background: #E8F0FB; }
+  .dot-fritid { background: #F4EEFE; }
+  .dot-helse  { background: #FDECEA; }
+  .dot-hjem   { background: #F0F4E8; }
+  .dot-klær   { background: #FBEAF0; }
+  .dot-annet  { background: #F1EFE8; }
+  .bar-mat    { background: #52B788; }
+  .bar-kaffe  { background: #E9A84C; }
+  .bar-transport { background: #4A90D9; }
+  .bar-fritid { background: #9B72CF; }
+  .bar-helse  { background: #E05C52; }
+  .bar-hjem   { background: #7DB548; }
+  .bar-klær   { background: #D4537E; }
+  .bar-annet  { background: #888780; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-date" id="headerDate"></div>
+    <div class="header-title">Forbruk</div>
+    <div id="syncStatus" style="font-size:12px;color:#7A7670;margin-top:4px;min-height:16px"></div>
+  </div>
+
+  <div class="daily-card">
+    <div class="daily-label">I dag</div>
+    <div class="daily-amount" id="dailyTotal">0 <span>kr</span></div>
+    <div class="daily-meta">
+      <div class="daily-meta-item">
+        <strong id="txCount">0 kjøp</strong>
+        registrert
+      </div>
+      <div class="daily-meta-item">
+        <strong id="monthTotal">0 kr</strong>
+        denne måneden
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-scroll" id="catFilter">
+    <div class="cat-pill active" data-cat="alle"><span class="cat-icon">📋</span> Alle</div>
+    <div class="cat-pill" data-cat="mat"><span class="cat-icon">🛒</span> Mat</div>
+    <div class="cat-pill" data-cat="kaffe"><span class="cat-icon">☕</span> Kaffe</div>
+    <div class="cat-pill" data-cat="transport"><span class="cat-icon">🚌</span> Transport</div>
+    <div class="cat-pill" data-cat="fritid"><span class="cat-icon">🎮</span> Fritid</div>
+    <div class="cat-pill" data-cat="helse"><span class="cat-icon">💊</span> Helse</div>
+    <div class="cat-pill" data-cat="hjem"><span class="cat-icon">🏠</span> Hjem</div>
+    <div class="cat-pill" data-cat="klær"><span class="cat-icon">👕</span> Klær</div>
+    <div class="cat-pill" data-cat="annet"><span class="cat-icon">📦</span> Annet</div>
+  </div>
+
+  <div class="section-label">Dagens kjøp</div>
+  <div class="tx-list" id="txList"></div>
+
+  <div class="week-card" id="weekCard" style="display:none">
+    <div class="week-title">Fordeling denne måneden</div>
+    <div class="cat-bar-row" id="catBars"></div>
+  </div>
+</div>
+
+<button class="add-fab">
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  Registrer kjøp
+</button>
+
+<div class="overlay" id="overlay" onclick="closeOnOverlay(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Nytt kjøp</div>
+
+    <div class="cat-grid" id="catGrid">
+      <div class="cat-option selected" data-cat="mat"><div class="opt-icon">🛒</div><div class="opt-label">Mat</div></div>
+      <div class="cat-option" data-cat="kaffe"><div class="opt-icon">☕</div><div class="opt-label">Kaffe</div></div>
+      <div class="cat-option" data-cat="transport"><div class="opt-icon">🚌</div><div class="opt-label">Transport</div></div>
+      <div class="cat-option" data-cat="fritid"><div class="opt-icon">🎮</div><div class="opt-label">Fritid</div></div>
+      <div class="cat-option" data-cat="helse"><div class="opt-icon">💊</div><div class="opt-label">Helse</div></div>
+      <div class="cat-option" data-cat="hjem"><div class="opt-icon">🏠</div><div class="opt-label">Hjem</div></div>
+      <div class="cat-option" data-cat="klær"><div class="opt-icon">👕</div><div class="opt-label">Klær</div></div>
+      <div class="cat-option" data-cat="annet"><div class="opt-icon">📦</div><div class="opt-label">Annet</div></div>
+    </div>
+
+    <div class="amount-row">
+      <div class="amount-label">Beløp</div>
+      <div class="amount-input-wrap">
+        <span class="amount-currency">kr</span>
+        <input class="amount-input" type="number" id="amountInput" placeholder="0" min="0" oninput="updateSaveBtn()">
+      </div>
+    </div>
+
+    <input class="note-input" type="text" id="noteInput" placeholder="Butikk eller notat (valgfritt)">
+
+    <button class="save-btn" id="saveBtn" onclick="saveEntry()" disabled>Lagre</button>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://bzoevwmyjorxfefbivkq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6b2V2d215am9yeGZlZmJpdmtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDMwMzgsImV4cCI6MjA5MzkxOTAzOH0.GNpyhSnHph1GpyEnwqYVdqIskQMpAAmZC3jYrhkkMwI';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const CATS = {
+  mat:       { label: 'Mat',       icon: '🛒' },
+  kaffe:     { label: 'Kaffe',     icon: '☕' },
+  transport: { label: 'Transport', icon: '🚌' },
+  fritid:    { label: 'Fritid',    icon: '🎮' },
+  helse:     { label: 'Helse',     icon: '💊' },
+  hjem:      { label: 'Hjem',      icon: '🏠' },
+  klær:      { label: 'Klær',      icon: '👕' },
+  annet:     { label: 'Annet',     icon: '📦' },
+};
+
+let entries = [];
+let selectedCat = 'mat';
+let filterCat = 'alle';
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function fmtAmt(n) { return n.toLocaleString('no-NO') + ' kr'; }
+
+function setStatus(msg, isError) {
+  let el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isError ? '#C0392B' : '#7A7670';
+}
+
+async function loadEntries() {
+  setStatus('Laster inn…');
+  const monthPrefix = todayStr().slice(0, 7);
+  const { data, error } = await sb
+    .from('entries')
+    .select('*')
+    .gte('date', monthPrefix + '-01')
+    .order('created_at', { ascending: true });
+  if (error) { setStatus('Feil ved lasting: ' + error.message, true); return; }
+  entries = (data || []).map(r => ({
+    id: r.id,
+    date: r.date,
+    ts: new Date(r.created_at).getTime(),
+    cat: r.category,
+    amount: Number(r.amount),
+    note: r.note || ''
+  }));
+  setStatus('');
+  render();
+}
+
+async function saveEntry() {
+  const amount = parseFloat(document.getElementById('amountInput').value);
+  if (!amount || amount <= 0) return;
+  const note = document.getElementById('noteInput').value.trim();
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Lagrer…';
+  setStatus('Lagrer…');
+  const { data, error } = await sb.from('entries').insert({
+    date: todayStr(),
+    amount,
+    category: selectedCat,
+    note: note || null
+  }).select().single();
+  if (error) {
+    setStatus('Feil: ' + error.message, true);
+    btn.disabled = false;
+    btn.textContent = 'Lagre';
+    return;
+  }
+  entries.push({
+    id: data.id,
+    date: data.date,
+    ts: new Date(data.created_at).getTime(),
+    cat: data.category,
+    amount: Number(data.amount),
+    note: data.note || ''
+  });
+  setStatus('');
+  render();
+  closeSheet();
+  btn.textContent = 'Lagre';
+}
+
+async function deleteEntry(id) {
+  const { error } = await sb.from('entries').delete().eq('id', id);
+  if (error) { setStatus('Feil ved sletting: ' + error.message, true); return; }
+  entries = entries.filter(e => e.id !== id);
+  render();
+}
+
+function render() {
+  const today = todayStr();
+  const todayEntries = entries.filter(e => e.date === today);
+  const monthEntries = entries;
+
+  const dailySum = todayEntries.reduce((s, e) => s + e.amount, 0);
+  const monthSum = monthEntries.reduce((s, e) => s + e.amount, 0);
+
+  document.getElementById('dailyTotal').innerHTML = `${dailySum.toLocaleString('no-NO')} <span>kr</span>`;
+  document.getElementById('txCount').textContent = todayEntries.length + ' kjøp';
+  document.getElementById('monthTotal').textContent = fmtAmt(monthSum);
+
+  const filtered = filterCat === 'alle' ? todayEntries : todayEntries.filter(e => e.cat === filterCat);
+  const list = document.getElementById('txList');
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${filterCat === 'alle' ? '📝' : CATS[filterCat]?.icon || '📦'}</div><p>${filterCat === 'alle' ? 'Ingen kjøp registrert i dag ennå.' : 'Ingen ' + (CATS[filterCat]?.label || filterCat).toLowerCase() + '-kjøp i dag.'}</p></div>`;
+  } else {
+    list.innerHTML = filtered.slice().reverse().map(e => {
+      const time = new Date(e.ts).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+      return `<div class="tx-item">
+        <div class="tx-dot dot-${e.cat}">${CATS[e.cat]?.icon || '📦'}</div>
+        <div class="tx-info">
+          <div class="tx-name">${e.note || CATS[e.cat]?.label || e.cat}</div>
+          <div class="tx-meta">${CATS[e.cat]?.label || e.cat} · ${time}</div>
+        </div>
+        <div class="tx-amount">${fmtAmt(e.amount)}</div>
+        <button class="tx-delete" data-id="${e.id}" title="Slett">×</button>
+      </div>`;
+    }).join('');
+    document.getElementById('txList').addEventListener('click', e => {
+      const btn = e.target.closest('.tx-delete');
+      if (btn) deleteEntry(btn.dataset.id);
+    }, { once: true });
+  }
+
+  const weekCard = document.getElementById('weekCard');
+  if (monthEntries.length > 0) {
+    weekCard.style.display = '';
+    const byCat = {};
+    monthEntries.forEach(e => { byCat[e.cat] = (byCat[e.cat] || 0) + e.amount; });
+    const maxVal = Math.max(...Object.values(byCat));
+    const sorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+    document.getElementById('catBars').innerHTML = sorted.map(([cat, val]) => `
+      <div class="cat-bar-item">
+        <div class="cat-bar-icon">${CATS[cat]?.icon || '📦'}</div>
+        <div class="cat-bar-label">${CATS[cat]?.label || cat}</div>
+        <div class="cat-bar-track"><div class="cat-bar-fill bar-${cat}" style="width:${Math.round(val/maxVal*100)}%"></div></div>
+        <div class="cat-bar-val">${fmtAmt(val)}</div>
+      </div>`).join('');
+  } else {
+    weekCard.style.display = 'none';
+  }
+}
+
+function setHeaderDate() {
+  const d = new Date();
+  const days = ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
+  const months = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  document.getElementById('headerDate').textContent = `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
+}
+
+function openSheet() {
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('amountInput').value = '';
+  document.getElementById('noteInput').value = '';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveBtn').textContent = 'Lagre';
+  setTimeout(() => document.getElementById('amountInput').focus(), 300);
+}
+
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function closeOnOverlay(e) {
+  if (e.target === document.getElementById('overlay')) closeSheet();
+}
+
+document.getElementById('catGrid').addEventListener('click', e => {
+  const opt = e.target.closest('.cat-option');
+  if (!opt) return;
+  document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+  opt.classList.add('selected');
+  selectedCat = opt.dataset.cat;
+});
+
+document.getElementById('catFilter').addEventListener('click', e => {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  filterCat = pill.dataset.cat;
+  render();
+});
+
+document.getElementById('amountInput').addEventListener('input', () => {
+  const v = parseFloat(document.getElementById('amountInput').value);
+  document.getElementById('saveBtn').disabled = !(v > 0);
+});
+
+document.getElementById('saveBtn').addEventListener('click', saveEntry);
+document.querySelector('.add-fab').addEventListener('click', openSheet);
+document.getElementById('overlay').addEventListener('click', closeOnOverlay);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+setHeaderDate();
+loadEntries();
+</script>
+</body>
+</html>
