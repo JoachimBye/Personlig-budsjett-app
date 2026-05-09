@@ -2,8 +2,20 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Forbruk</title>
+
+<!-- ── Apple PWA ───────────────────────────────────────────── -->
+<!-- Gjør appen fullskjerm (uten Safari-adressefeltet) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Navn som vises under ikonet på hjemskjermen -->
+<meta name="apple-mobile-web-app-title" content="Forbruk">
+<!-- Statuslinje-stil: default = lys, black = mørk -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- Android Chrome tema-farge -->
+<meta name="theme-color" content="#F5F2ED">
+<!-- App-ikonet (180×180 px for iPhone Retina) -->
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
 <style>
   :root {
     /* Fargepalett – uendret, den er god */
@@ -59,6 +71,12 @@
     max-width: 440px;
     margin: 0 auto;
     padding: 0 0 calc(var(--tabbar-h) + 8px);
+  }
+
+  /* Fullskjerm-modus (når lagt til hjemskjerm): legg til plass for statuslinjen */
+  @media all and (display-mode: standalone) {
+    .app { padding-top: env(safe-area-inset-top); }
+    .tabbar { padding-bottom: env(safe-area-inset-bottom); height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
   }
 
   .page { display: none; }
